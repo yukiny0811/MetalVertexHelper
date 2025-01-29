@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  VertexObject.swift
 //  SharedSpaceGraphics
 //
 //  Created by Yuki Kuwashima on 2025/01/27.
@@ -33,7 +33,7 @@ public struct VertexObject: MemberMacro {
     
     static func toCObjectString(typeStringArray: [String], variableNameArray: [String]) throws -> String {
         guard typeStringArray.count == variableNameArray.count else {
-            throw "mismatch array count error"
+            throw MetalVertexHelperMacroError.failed(description: "mismatch array count error")
         }
         
         var typeResultString: [String] = []
@@ -70,7 +70,7 @@ public struct VertexObject: MemberMacro {
                 valueResultString[valueResultString.count-2] = varName + ".z"
                 valueResultString[valueResultString.count-1] = varName + ".w"
             default:
-                throw "type error"
+                throw MetalVertexHelperMacroError.failed(description: "type error")
             }
             if currentOffset >= 16 {
                 currentAlign = .four
@@ -228,7 +228,7 @@ public struct VertexObject: MemberMacro {
         case .sixteen:
             break
         }
-        throw "align error"
+        throw MetalVertexHelperMacroError.failed(description: "align error")
     }
     
     static func toVertexDescriptorString(typeStringArray: [String]) throws -> String {

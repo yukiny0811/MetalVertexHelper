@@ -1,13 +1,15 @@
+//
+//  MetalVertexHelperPlugin.swift
+//  MetalVertexHelper
+//
+//  Created by Yuki Kuwashima on 2025/01/29.
+//
+
 import SwiftCompilerPlugin
 import Foundation
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
-
-extension String: @retroactive Error {}
-extension String: @retroactive LocalizedError {
-    public var errorDescription: String? { self }
-}
 
 @main
 struct MetalVertexHelperPlugin: CompilerPlugin {
