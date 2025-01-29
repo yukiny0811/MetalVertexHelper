@@ -13,7 +13,7 @@ let package = Package(
         .library(
             name: "MetalVertexHelper",
             targets: ["MetalVertexHelper"]
-        ),
+        )
     ],
     dependencies: [
         .package(url: "https://github.com/swiftlang/swift-syntax.git", exact: "600.0.1"),
@@ -32,5 +32,11 @@ let package = Package(
                 "MetalVertexHelperMacros",
             ]
         ),
+        .testTarget(
+            name: "MetalVertexHelperTests",
+            dependencies: [
+                "MetalVertexHelper"
+            ]
+        )
     ]
 )

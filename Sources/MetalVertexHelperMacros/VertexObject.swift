@@ -78,6 +78,14 @@ public struct VertexObject: MemberMacro {
             }
         }
         
+        let remainder = currentOffset % 16
+        let remainderCount = remainder / 4
+        
+        for _ in 0..<remainderCount {
+            typeResultString.append("Float")
+            valueResultString.append("0.0")
+        }
+        
         return "public var cObject: (\(typeResultString.joined(separator: ","))) { (\(valueResultString.joined(separator: ","))) }"
     }
     
@@ -269,6 +277,9 @@ public struct VertexObject: MemberMacro {
             }
         }
         
+        let remainder = totalOffset % 16
+        totalOffset += remainder
+        
         resultString += "descriptor.layouts[0].stride = \(totalOffset)" + "\n"
         resultString += "descriptor.layouts[0].stepRate = 1" + "\n"
         resultString += "descriptor.layouts[0].stepFunction = .perVertex" + "\n"
@@ -307,7 +318,9 @@ public struct VertexObject: MemberMacro {
             }
         }
         
-        return totalOffset
+        let remainder = totalOffset % 16
+        
+        return totalOffset + remainder
     }
     
     public static func expansion(
