@@ -20,39 +20,13 @@ MetalVertexHelper is a Swift package designed to simplify the creation and manag
 
 MetalVertexHelper is distributed via Swift Package Manager. To add it to your project:
 
-1. **Add Dependency:**
+In your `Package.swift`, add MetalVertexHelper as a dependency:
 
-   In your `Package.swift`, add MetalVertexHelper as a dependency:
-
-   ```swift
-   dependencies: [
-       .package(url: "https://github.com/yourusername/MetalVertexHelper.git", exact: "1.0.0"),
-   ],
-   ```
-
-2. **Add to Targets:**
-
-   Include `MetalVertexHelper` in the dependencies of your target:
-
-   ```swift
-   targets: [
-       .target(
-           name: "YourTarget",
-           dependencies: [
-               "MetalVertexHelper",
-           ]
-       ),
-       // ... other targets
-   ]
-   ```
-
-3. **Run Package Update:**
-
-   Execute the following command to fetch and integrate the package:
-
-   ```bash
-   swift package update
-   ```
+```swift
+dependencies: [
+    .package(url: "https://github.com/yourusername/MetalVertexHelper.git", exact: "1.0.0"),
+],
+```
 
 ## Usage
 
