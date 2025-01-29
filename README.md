@@ -1,6 +1,6 @@
 # MetalVertexHelper
 
-**MetalVertexHelper** is a Swift package that simplifies the creation and management of vertex data for Metal applications. By leveraging Swift's powerful macro system, MetalVertexHelper automatically generates essential components such as C-compatible objects, vertex descriptors, and memory size calculations based on your Swift structs. This streamlined approach ensures type safety, reduces boilerplate code, and enhances performance in your Metal-based graphics and compute applications.
+MetalVertexHelper is a Swift package designed to simplify the creation and management of vertex data for Metal applications. Have you ever struggled with memory alignment between Swift and Metal? MetalVertexHelper was created to solve that very problem. By leveraging Swift's powerful macro system, MetalVertexHelper automatically generates essential components such as C-compatible objects, vertex descriptors, and memory size calculations based on your Swift structs. Simply annotate your Swift struct with @VertexObject, and MetalVertexHelper will handle the necessary padding to align with Metal's requirements, ensuring type safety, reducing boilerplate code, and enhancing performance in your Metal-based graphics and compute applications.
 
 
 ## Features
@@ -8,7 +8,6 @@
 - **Automatic C-Compatible Object Generation:** Converts Swift vertex structs into C-compatible tuples, including necessary padding for alignment.
 - **Vertex Descriptor Generation:** Automatically creates `MTLVertexDescriptor` instances based on your vertex data, ensuring optimal memory layout and performance.
 - **Memory Size Calculation:** Computes the memory size required for your vertex structures, facilitating efficient buffer allocations.
-- **Seamless Integration with Swift Package Manager:** Easily integrate into your projects using Swift Package Manager.
 
 ## Installation
 
