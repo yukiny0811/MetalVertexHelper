@@ -16,15 +16,11 @@ class Tests: XCTestCase {
         @VertexObject
         struct Vertex {
             var a: Float
-            var b: simd_float2
-            var c: simd_float3
-            var d: simd_float4
-            var e: Float
-            var f: simd_float3
-            var g: simd_float2
+            var f: simd_float4
         }
-        let _ = Vertex(a: 1, b: .one * 2, c: .one * 3, d: .one * 4, e: 1 * 5, f: .one * 6, g: .one * 7)
-//        (1.0, 0.0, 2.0, 2.0, 3.0, 3.0, 3.0, 0.0, 4.0, 4.0, 4.0, 4.0, 5.0, 0.0, 0.0, 0.0, 6.0, 6.0, 6.0, 0.0, 7.0, 7.0, 0.0, 0.0)
-        
+        let a = Vertex(a: 3.0, f: .init(2, 3, 4, 5))
+        print(a.cObject)
+        print(Vertex.memorySize)
+        print(MemoryLayout<Vertex>.stride)
     }
 }

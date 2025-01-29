@@ -14,313 +14,135 @@ import simd
 
 public struct VertexObject: MemberMacro {
     
-    private static let supportedTypes: [String] = [
-        "Float",
-        "simd_float2",
-        "simd_float3",
-        "simd_float4",
-    ]
-    
-    private static func isSuppported(_ typeString: String) -> Bool {
-        return supportedTypes.contains(typeString)
-    }
-    
-    enum AlignType: Int, Equatable {
-        case four
-        case eight
-        case sixteen
-    }
-    
-    static func toCObjectString(typeStringArray: [String], variableNameArray: [String]) throws -> String {
+    static func toCObjectString(
+        typeStringArray: [String],
+        variableNameArray: [String]
+    ) throws -> String {
         guard typeStringArray.count == variableNameArray.count else {
             throw MetalVertexHelperMacroError.failed(description: "mismatch array count error")
         }
-        
         var typeResultString: [String] = []
         var valueResultString: [String] = []
-        var currentAlign: AlignType = .four // 4 or 8 or 16
-        var currentOffset: Int = 0 // current offset (32 byte alignment)
+        var currentOffset: Int = 0
+        var structAlignment: Int = 1
         
         for (typeStr, varName) in zip(typeStringArray, variableNameArray) {
-            switch typeStr {
-            case "Float":
-                let alignCount = try getAlignedCount(currentAlign: &currentAlign, currentOffset: &currentOffset, targetType: .four)
-                typeResultString += Array(repeating: "Float", count: alignCount)
-                valueResultString += Array(repeating: "0.0", count: alignCount)
-                valueResultString[valueResultString.count-1] = varName
-            case "simd_float2":
-                let alignCount = try getAlignedCount(currentAlign: &currentAlign, currentOffset: &currentOffset, targetType: .eight)
-                typeResultString += Array(repeating: "Float", count: alignCount)
-                valueResultString += Array(repeating: "0.0", count: alignCount)
-                valueResultString[valueResultString.count-2] = varName + ".x"
-                valueResultString[valueResultString.count-1] = varName + ".y"
-            case "simd_float3":
-                let alignCount = try getAlignedCount(currentAlign: &currentAlign, currentOffset: &currentOffset, targetType: .sixteen)
-                typeResultString += Array(repeating: "Float", count: alignCount)
-                valueResultString += Array(repeating: "0.0", count: alignCount)
-                valueResultString[valueResultString.count-4] = varName + ".x"
-                valueResultString[valueResultString.count-3] = varName + ".y"
-                valueResultString[valueResultString.count-2] = varName + ".z"
-            case "simd_float4":
-                let alignCount = try getAlignedCount(currentAlign: &currentAlign, currentOffset: &currentOffset, targetType: .sixteen)
-                typeResultString += Array(repeating: "Float", count: alignCount)
-                valueResultString += Array(repeating: "0.0", count: alignCount)
-                valueResultString[valueResultString.count-4] = varName + ".x"
-                valueResultString[valueResultString.count-3] = varName + ".y"
-                valueResultString[valueResultString.count-2] = varName + ".z"
-                valueResultString[valueResultString.count-1] = varName + ".w"
-            default:
-                throw MetalVertexHelperMacroError.failed(description: "type error")
+            guard let field = SupportedTypes.all.first(where: { $0.typeName == typeStr }) else {
+                throw MetalVertexHelperMacroError.failed(description: "type \(typeStr) is not supported")
             }
-            if currentOffset >= 16 {
-                currentAlign = .four
-                currentOffset = 0
+            
+            let fieldAlign = field.alignment.rawValue
+            let fieldSize  = field.size
+            
+            let padCount = (fieldAlign - (currentOffset % fieldAlign)) % fieldAlign
+            for _ in 0..<padCount {
+                typeResultString.append("Bool")
+                valueResultString.append("false")
+            }
+            currentOffset += padCount
+            
+            let swiftCType = typeStr
+            typeResultString.append(swiftCType)
+            valueResultString.append(varName)
+            
+            currentOffset += fieldSize
+            
+            if fieldAlign > structAlignment {
+                structAlignment = fieldAlign
             }
         }
         
-        let remainder = currentOffset % 16
-        let remainderCount = remainder / 4
-        
-        for _ in 0..<remainderCount {
-            typeResultString.append("Float")
-            valueResultString.append("0.0")
+        let finalPadCount = (structAlignment - (currentOffset % structAlignment)) % structAlignment
+        for _ in 0..<finalPadCount {
+            typeResultString.append("Bool")
+            valueResultString.append("false")
         }
+        currentOffset += finalPadCount
         
-        return "public var cObject: (\(typeResultString.joined(separator: ","))) { (\(valueResultString.joined(separator: ","))) }"
+        let typeString = typeResultString.joined(separator: ",")
+        let valueString = valueResultString.joined(separator: ",")
+        return "public var cObject: (\(typeString)) { (\(valueString)) }"
     }
     
-    static func getAlignedCount(currentAlign: inout AlignType, currentOffset: inout Int, targetType: AlignType) throws -> Int {
-        switch currentAlign {
-        case .four:
-            if targetType == .four {
-                if currentOffset == 0 {
-                    currentOffset += 4
-                    currentAlign = .four
-                    return 1
-                }
-                if currentOffset == 4 {
-                    currentOffset += 4
-                    currentAlign = .four
-                    return 1
-                }
-                if currentOffset == 8 {
-                    currentOffset += 4
-                    currentAlign = .four
-                    return 1
-                }
-                if currentOffset == 12 {
-                    currentOffset += 4
-                    currentAlign = .four
-                    return 1
-                }
-            }
-            if targetType == .eight {
-                if currentOffset == 0 {
-                    currentOffset += 8
-                    currentAlign = .eight
-                    return 2
-                }
-                if currentOffset == 4 {
-                    currentOffset += 12
-                    currentAlign = .eight
-                    return 3
-                }
-                if currentOffset == 8 {
-                    currentOffset += 8
-                    currentAlign = .eight
-                    return 2
-                }
-                if currentOffset == 12 {
-                    currentOffset += 12
-                    currentAlign = .eight
-                    return 3
-                }
-            }
-            if targetType == .sixteen {
-                if currentOffset == 0 {
-                    currentOffset += 16
-                    currentAlign = .sixteen
-                    return 4
-                }
-                if currentOffset == 4 {
-                    currentOffset += 28
-                    currentAlign = .sixteen
-                    return 7
-                }
-                if currentOffset == 8 {
-                    currentOffset += 24
-                    currentAlign = .sixteen
-                    return 6
-                }
-                if currentOffset == 12 {
-                    currentOffset += 20
-                    currentAlign = .sixteen
-                    return 5
-                }
-            }
-        case .eight:
-            if targetType == .four {
-                if currentOffset == 0 {
-                    currentOffset += 4
-                    currentAlign = .eight
-                    return 1
-                }
-                if currentOffset == 4 {
-                    currentOffset += 4
-                    currentAlign = .eight
-                    return 1
-                }
-                if currentOffset == 8 {
-                    currentOffset += 4
-                    currentAlign = .eight
-                    return 1
-                }
-                if currentOffset == 12 {
-                    currentOffset += 4
-                    currentAlign = .eight
-                    return 1
-                }
-            }
-            if targetType == .eight {
-                if currentOffset == 0 {
-                    currentOffset += 8
-                    currentAlign = .eight
-                    return 2
-                }
-                if currentOffset == 4 {
-                    currentOffset += 12
-                    currentAlign = .eight
-                    return 3
-                }
-                if currentOffset == 8 {
-                    currentOffset += 8
-                    currentAlign = .eight
-                    return 2
-                }
-                if currentOffset == 12 {
-                    currentOffset += 12
-                    currentAlign = .eight
-                    return 3
-                }
-            }
-            if targetType == .sixteen {
-                if currentOffset == 0 {
-                    currentOffset += 16
-                    currentAlign = .sixteen
-                    return 4
-                }
-                if currentOffset == 4 {
-                    currentOffset += 28
-                    currentAlign = .sixteen
-                    return 7
-                }
-                if currentOffset == 8 {
-                    currentOffset += 24
-                    currentAlign = .sixteen
-                    return 6
-                }
-                if currentOffset == 12 {
-                    currentOffset += 20
-                    currentAlign = .sixteen
-                    return 5
-                }
-            }
-        case .sixteen:
-            break
+    private static func getVertexFormatInfo(for typeStr: String) -> (format: String, size: Int, alignment: Int, floatCount: Int) {
+        switch typeStr {
+        case "Float":
+            return (".float", 4, 4, 1)
+        case "simd_float2":
+            return (".float2", 8, 8, 2)
+        case "simd_float3":
+            return (".float3", 12, 16, 3)
+        case "simd_float4":
+            return (".float4", 16, 16, 4)
+        default:
+            return (".invalid",  0,  1,  0)
         }
-        throw MetalVertexHelperMacroError.failed(description: "align error")
     }
-    
-    static func toVertexDescriptorString(typeStringArray: [String]) throws -> String {
-        var resultString: String = ""
-        resultString += "let descriptor = MTLVertexDescriptor()"
+
+    static func toVertexDescriptorString(typeStringArray: [String]) -> String {
+        var result = ""
+        result += "public static func generateVertexDescriptor() -> MTLVertexDescriptor {\n"
+        result += "    let descriptor = MTLVertexDescriptor()\n\n"
         
-        var attributeIndex: Int = 0
-        var totalOffset: Int = 0
-        
-        var currentAlign: AlignType = .four // 4 or 8 or 16
-        var currentOffset: Int = 0 // current offset (32 byte alignment)
+        var offset = 0
+        var attributeIndex = 0
         
         for typeStr in typeStringArray {
-            switch typeStr {
-            case "Float":
-                let alignCount = try getAlignedCount(currentAlign: &currentAlign, currentOffset: &currentOffset, targetType: .four)
-                resultString += "descriptor.attributes[\(attributeIndex)].format = .float" + "\n"
-                resultString += "descriptor.attributes[\(attributeIndex)].offset = \(totalOffset)" + "\n"
-                resultString += "descriptor.attributes[\(attributeIndex)].bufferIndex = 0" + "\n"
-                totalOffset += alignCount * 4
-            case "simd_float2":
-                let alignCount = try getAlignedCount(currentAlign: &currentAlign, currentOffset: &currentOffset, targetType: .eight)
-                resultString += "descriptor.attributes[\(attributeIndex)].format = .float2" + "\n"
-                resultString += "descriptor.attributes[\(attributeIndex)].offset = \(totalOffset)" + "\n"
-                resultString += "descriptor.attributes[\(attributeIndex)].bufferIndex = 0" + "\n"
-                totalOffset += alignCount * 4
-            case "simd_float3":
-                let alignCount = try getAlignedCount(currentAlign: &currentAlign, currentOffset: &currentOffset, targetType: .sixteen)
-                resultString += "descriptor.attributes[\(attributeIndex)].format = .float3" + "\n"
-                resultString += "descriptor.attributes[\(attributeIndex)].offset = \(totalOffset)" + "\n"
-                resultString += "descriptor.attributes[\(attributeIndex)].bufferIndex = 0" + "\n"
-                totalOffset += alignCount * 4
-            case "simd_float4":
-                let alignCount = try getAlignedCount(currentAlign: &currentAlign, currentOffset: &currentOffset, targetType: .sixteen)
-                resultString += "descriptor.attributes[\(attributeIndex)].format = .float4" + "\n"
-                resultString += "descriptor.attributes[\(attributeIndex)].offset = \(totalOffset)" + "\n"
-                resultString += "descriptor.attributes[\(attributeIndex)].bufferIndex = 0" + "\n"
-                totalOffset += alignCount * 4
-            default:
-                break
+            let info = getVertexFormatInfo(for: typeStr)
+            if info.format == ".invalid" {
+                result += "    // Unsupported type: \(typeStr)\n"
+                continue
             }
+            offset = roundUp(offset, to: info.alignment)
+            
+            result += "    descriptor.attributes[\(attributeIndex)].format = \(info.format)\n"
+            result += "    descriptor.attributes[\(attributeIndex)].offset = \(offset)\n"
+            result += "    descriptor.attributes[\(attributeIndex)].bufferIndex = 0\n\n"
+            
+            offset += info.size
+            
             attributeIndex += 1
-            if currentOffset >= 16 {
-                currentAlign = .four
-                currentOffset = 0
-            }
         }
         
-        let remainder = totalOffset % 16
-        totalOffset += remainder
+        let finalStride = roundUp(offset, to: 16)
         
-        resultString += "descriptor.layouts[0].stride = \(totalOffset)" + "\n"
-        resultString += "descriptor.layouts[0].stepRate = 1" + "\n"
-        resultString += "descriptor.layouts[0].stepFunction = .perVertex" + "\n"
-        resultString += "return descriptor" + "\n"
+        result += "    descriptor.layouts[0].stride = \(finalStride)\n"
+        result += "    descriptor.layouts[0].stepRate = 1\n"
+        result += "    descriptor.layouts[0].stepFunction = .perVertex\n\n"
+        result += "    return descriptor\n"
+        result += "}"
         
-        return "public static func generateVertexDescriptor() -> MTLVertexDescriptor {\n" + resultString + "}"
+        return result
+    }
+
+    private static func roundUp(_ offset: Int, to alignment: Int) -> Int {
+        let remainder = offset % alignment
+        return remainder == 0 ? offset : (offset + (alignment - remainder))
+    }
+
+    static func getMemorySize(typeStringArray: [String], structAlign: AlignType) throws -> Int {
+        var currentOffset = 0
+
+        for typeStr in typeStringArray {
+            guard let field = SupportedTypes.all.first(where: { $0.typeName == typeStr }) else {
+                throw MetalVertexHelperMacroError.failed(description: "type \(typeStr) is not supported")
+            }
+            currentOffset = roundUp(currentOffset, to: field.alignment.rawValue)
+            currentOffset += field.size
+        }
+        currentOffset = roundUp(currentOffset, to: structAlign.rawValue)
+        return currentOffset
     }
     
-    static func getMemorySize(typeStringArray: [String]) throws -> Int {
-        
-        var totalOffset: Int = 0
-        
-        var currentAlign: AlignType = .four // 4 or 8 or 16
-        var currentOffset: Int = 0 // current offset (32 byte alignment)
-        
-        for typeStr in typeStringArray {
-            switch typeStr {
-            case "Float":
-                let alignCount = try getAlignedCount(currentAlign: &currentAlign, currentOffset: &currentOffset, targetType: .four)
-                totalOffset += alignCount * 4
-            case "simd_float2":
-                let alignCount = try getAlignedCount(currentAlign: &currentAlign, currentOffset: &currentOffset, targetType: .eight)
-                totalOffset += alignCount * 4
-            case "simd_float3":
-                let alignCount = try getAlignedCount(currentAlign: &currentAlign, currentOffset: &currentOffset, targetType: .sixteen)
-                totalOffset += alignCount * 4
-            case "simd_float4":
-                let alignCount = try getAlignedCount(currentAlign: &currentAlign, currentOffset: &currentOffset, targetType: .sixteen)
-                totalOffset += alignCount * 4
-            default:
-                break
+    static func calculateStructAlignment(typeStringArray: [String]) throws -> AlignType {
+        var largestAlign = AlignType.one
+        for type in typeStringArray {
+            guard let field = SupportedTypes.all.first(where: { $0.typeName == type }) else {
+                throw MetalVertexHelperMacroError.failed(description: "type \(type) is not supported")
             }
-            if currentOffset >= 16 {
-                currentAlign = .four
-                currentOffset = 0
-            }
+            largestAlign = max(field.alignment, largestAlign)
         }
-        
-        let remainder = totalOffset % 16
-        
-        return totalOffset + remainder
+        return largestAlign
     }
     
     public static func expansion(
@@ -343,16 +165,15 @@ public struct VertexObject: MemberMacro {
             guard let typeString = firstBinding.typeAnnotation?.type.trimmedDescription else {
                 continue
             }
-            guard isSuppported(typeString) else {
-                continue
-            }
             typeStringArray.append(typeString)
             variableNameArray.append(variableName)
         }
         
+        let structAlign = try calculateStructAlignment(typeStringArray: typeStringArray)
+        
         let compiledObjectString = try toCObjectString(typeStringArray: typeStringArray, variableNameArray: variableNameArray)
-        let compiledDescriptorString = try toVertexDescriptorString(typeStringArray: typeStringArray)
-        let memorySize = try getMemorySize(typeStringArray: typeStringArray)
+        let compiledDescriptorString = toVertexDescriptorString(typeStringArray: typeStringArray)
+        let memorySize = try getMemorySize(typeStringArray: typeStringArray, structAlign: structAlign)
         return [
             DeclSyntax(stringLiteral: compiledObjectString),
             DeclSyntax(stringLiteral: compiledDescriptorString),
