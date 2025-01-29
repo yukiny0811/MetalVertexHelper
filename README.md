@@ -24,7 +24,7 @@ In your `Package.swift`, add MetalVertexHelper as a dependency:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/yourusername/MetalVertexHelper.git", exact: "1.0.0"),
+    .package(url: "https://github.com/yukiny0811/MetalVertexHelper.git", from: "1.0.0"),
 ],
 ```
 
