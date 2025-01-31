@@ -71,7 +71,7 @@ public struct VertexObject: MemberMacro {
         case "simd_float2":
             return (".float2", 8, 8, 2)
         case "simd_float3":
-            return (".float3", 12, 16, 3)
+            return (".float3", 16, 16, 3)
         case "simd_float4":
             return (".float4", 16, 16, 4)
         default:
