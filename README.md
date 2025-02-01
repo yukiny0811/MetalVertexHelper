@@ -4,8 +4,7 @@ Before Macro Expansion
 <img width="1256" alt="image" src="https://github.com/user-attachments/assets/cd64068e-bd2b-40c8-a8ab-451114b9fbc1" />
 
 After Macro Expansion
-<img width="1782" alt="image" src="https://github.com/user-attachments/assets/c45080a0-f393-47a1-85e0-77653d6cd6c8" />
-
+<img width="1554" alt="image" src="https://github.com/user-attachments/assets/622e11bc-e607-4e9c-9549-3e0b03a3abfb" />
 
 MetalVertexHelper is a Swift package designed to simplify the creation and management of vertex data for Metal applications. Have you ever struggled with memory alignment between Swift and Metal? MetalVertexHelper was created to solve that very problem. By leveraging Swift's powerful macro system, MetalVertexHelper automatically generates essential components such as C-compatible objects, vertex descriptors, and memory size calculations based on your Swift structs. Simply annotate your Swift struct with @VertexObject, and MetalVertexHelper will handle the necessary padding to align with Metal's requirements, ensuring type safety, reducing boilerplate code, and enhancing performance in your Metal-based graphics and compute applications.
 
