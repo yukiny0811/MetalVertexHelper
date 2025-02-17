@@ -7,8 +7,8 @@ import CompilerPluginSupport
 let package = Package(
     name: "MetalVertexHelper",
     platforms: [
-        .macOS(.v15),
-        .iOS(.v18),
+        .macOS(.v14),
+        .iOS(.v17),
         .visionOS(.v2),
     ],
     products: [
