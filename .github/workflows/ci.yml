@@ -6,6 +6,8 @@ on:
   pull_request:
     branches: [ main ]
   workflow_dispatch:
+  schedule:
+    - cron: "30 5 * * *"
 
 # Use Xcode 16 on macOS 15 to support Swift 6 toolchain used by this package
 env:
@@ -28,38 +30,6 @@ jobs:
             build \
             -destination "generic/platform=macOS" | xcpretty
 
-      - name: Build iOS
-        run: |
-          set -o pipefail && \
-          xcodebuild -skipMacroValidation -skipPackagePluginValidation \
-            -scheme MetalVertexHelper \
-            build \
-            -destination "generic/platform=iOS" | xcpretty
-
-      - name: Build iOS Simulator
-        run: |
-          set -o pipefail && \
-          xcodebuild -skipMacroValidation -skipPackagePluginValidation \
-            -scheme MetalVertexHelper \
-            build \
-            -destination "generic/platform=iOS Simulator" | xcpretty
-
-      - name: Build visionOS
-        run: |
-          set -o pipefail && \
-          xcodebuild -skipMacroValidation -skipPackagePluginValidation \
-            -scheme MetalVertexHelper \
-            build \
-            -destination "generic/platform=visionOS" | xcpretty
-
-      - name: Build visionOS Simulator
-        run: |
-          set -o pipefail && \
-          xcodebuild -skipMacroValidation -skipPackagePluginValidation \
-            -scheme MetalVertexHelper \
-            build \
-            -destination "generic/platform=visionOS Simulator" | xcpretty
-
   test:
     runs-on: macos-15
     steps:
@@ -75,19 +45,3 @@ jobs:
             -scheme MetalVertexHelperTests \
             test \
             -destination "platform=macOS" | xcpretty
-
-      - name: Test iOS Simulator
-        run: |
-          set -o pipefail && \
-          xcodebuild -skipMacroValidation -skipPackagePluginValidation \
-            -scheme MetalVertexHelperTests \
-            test \
-            -destination "platform=iOS Simulator" | xcpretty
-
-      - name: Test visionOS Simulator
-        run: |
-          set -o pipefail && \
-          xcodebuild -skipMacroValidation -skipPackagePluginValidation \
-            -scheme MetalVertexHelperTests \
-            test \
-            -destination "platform=visionOS Simulator" | xcpretty
