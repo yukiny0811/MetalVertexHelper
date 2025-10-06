@@ -24,7 +24,7 @@ jobs:
         run: |
           set -o pipefail && \
           xcodebuild -skipMacroValidation -skipPackagePluginValidation \
-            -scheme MetalVertexHelper-Package \
+            -scheme MetalVertexHelper \
             build \
             -destination "generic/platform=macOS" | xcpretty
 
@@ -32,7 +32,7 @@ jobs:
         run: |
           set -o pipefail && \
           xcodebuild -skipMacroValidation -skipPackagePluginValidation \
-            -scheme MetalVertexHelper-Package \
+            -scheme MetalVertexHelper \
             build \
             -destination "generic/platform=iOS" | xcpretty
 
@@ -40,7 +40,7 @@ jobs:
         run: |
           set -o pipefail && \
           xcodebuild -skipMacroValidation -skipPackagePluginValidation \
-            -scheme MetalVertexHelper-Package \
+            -scheme MetalVertexHelper \
             build \
             -destination "generic/platform=iOS Simulator" | xcpretty
 
@@ -48,7 +48,7 @@ jobs:
         run: |
           set -o pipefail && \
           xcodebuild -skipMacroValidation -skipPackagePluginValidation \
-            -scheme MetalVertexHelper-Package \
+            -scheme MetalVertexHelper \
             build \
             -destination "generic/platform=visionOS" | xcpretty
 
@@ -56,7 +56,7 @@ jobs:
         run: |
           set -o pipefail && \
           xcodebuild -skipMacroValidation -skipPackagePluginValidation \
-            -scheme MetalVertexHelper-Package \
+            -scheme MetalVertexHelper \
             build \
             -destination "generic/platform=visionOS Simulator" | xcpretty
 
@@ -72,7 +72,7 @@ jobs:
         run: |
           set -o pipefail && \
           xcodebuild -skipMacroValidation -skipPackagePluginValidation \
-            -scheme MetalVertexHelper-Package \
+            -scheme MetalVertexHelperTests \
             test \
             -destination "platform=macOS" | xcpretty
 
@@ -80,7 +80,7 @@ jobs:
         run: |
           set -o pipefail && \
           xcodebuild -skipMacroValidation -skipPackagePluginValidation \
-            -scheme MetalVertexHelper-Package \
+            -scheme MetalVertexHelperTests \
             test \
             -destination "platform=iOS Simulator" | xcpretty
 
@@ -88,6 +88,6 @@ jobs:
         run: |
           set -o pipefail && \
           xcodebuild -skipMacroValidation -skipPackagePluginValidation \
-            -scheme MetalVertexHelper-Package \
+            -scheme MetalVertexHelperTests \
             test \
             -destination "platform=visionOS Simulator" | xcpretty

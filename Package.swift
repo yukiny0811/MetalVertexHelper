@@ -33,6 +33,12 @@ let package = Package(
             dependencies: [
                 "MetalVertexHelperMacros",
             ]
+        ),
+        .testTarget(
+            name: "MetalVertexHelperTests",
+            dependencies: [
+                "MetalVertexHelper"
+            ]
         )
     ]
 )
